@@ -93,7 +93,7 @@ public class PerformanceStorageTest {
 		IndexWriter w = new IndexWriter(the_directory, config);
 
 		long before = System.currentTimeMillis();
-		for (int i = 0; i < 10000000; i++) {
+		for (int i = 0; i < 1000; i++) {
 			addDoc(w, "Das ist ein Titel  für mich", UUID.randomUUID().toString());
 		}
 		long after = System.currentTimeMillis();

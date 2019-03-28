@@ -49,7 +49,7 @@ public class ClusterStorageTest {
 	private static final String STORAGE_TEST_INDEX = "storageTest";
 	private static Directory directory;
 
-	@BeforeClass
+//	@BeforeClass
 	public static void cleanDatabaseAndInit() throws Exception {
 		System.setProperty("java.net.preferIPv4Stack" , "true");
 
@@ -73,7 +73,7 @@ public class ClusterStorageTest {
 		w.close();
 	}
 
-	@AfterClass
+//	@AfterClass
 	public static void closeDirectory() throws Exception {
 		directory.close();
 	}
