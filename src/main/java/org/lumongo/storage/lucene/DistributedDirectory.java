@@ -12,7 +12,6 @@ package org.lumongo.storage.lucene;
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
  * specific language governing permissions and limitations under the License.
  */
-
 import org.apache.lucene.index.IndexFileNames;
 import org.apache.lucene.store.BaseDirectory;
 import org.apache.lucene.store.Directory;
@@ -26,11 +25,15 @@ import org.apache.lucene.store.SingleInstanceLockFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class DistributedDirectory extends BaseDirectory {
 
-	/** Used to generate temp file names in {@link #createTempOutput}. */
+	/**
+	 * Used to generate temp file names in {@link #createTempOutput}.
+	 */
 	private final AtomicLong nextTempFileCounter = new AtomicLong();
 
 	protected NosqlDirectory nosqlDirectory;
@@ -46,6 +49,8 @@ public class DistributedDirectory extends BaseDirectory {
 
 	/**
 	 * ignore IOContext
+	 * @param context
+	 * @return 
 	 */
 	@Override
 	public IndexOutput createOutput(String name, IOContext context) throws IOException {
@@ -88,9 +93,10 @@ public class DistributedDirectory extends BaseDirectory {
 
 	/**
 	 * ignore IOContext
+	 *
 	 * @param name
 	 * @param context
-	 * @return 
+	 * @return
 	 * @throws java.io.IOException
 	 */
 	@Override
@@ -139,6 +145,11 @@ public class DistributedDirectory extends BaseDirectory {
 	@Override
 	public String toString() {
 		return nosqlDirectory.toString();
+	}
+
+	@Override
+	public Set<String> getPendingDeletions() throws IOException {
+		return Collections.EMPTY_SET;
 	}
 
 }

@@ -40,9 +40,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -121,9 +125,9 @@ public class PerformanceStorageTest {
 		w.updateDocument(uidTerm, doc);
 	}
 
-	private static int runQuery(IndexReader indexReader, QueryParser qp, String queryStr, int count) throws IOException, ParseException {
+	private static int runQuery(IndexReader indexReader, StandardQueryParser qp, String queryStr, int count) throws Exception {
 
-		Query q = qp.parse(queryStr);
+		Query q = qp.parse(queryStr, "title");
 
 		return runQuery(indexReader, count, q);
 
@@ -133,9 +137,8 @@ public class PerformanceStorageTest {
 		long start = System.currentTimeMillis();
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 
-		Sort sort = new Sort();
+		Sort sort = new Sort(new SortedSetSortField("category", false));
 
-		sort.setSort(new SortedSetSortField("category", false));
 
 		TopFieldCollector collector = TopFieldCollector.create(sort, count, Integer.MAX_VALUE);
 
@@ -162,46 +165,16 @@ public class PerformanceStorageTest {
 	}
 
 	@Test
-	public void test2Query() throws IOException, ParseException {
+	public void test2Query() throws Exception {
 		IndexReader indexReader = DirectoryReader.open(directory);
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
-		QueryParser qp = new QueryParser("title", analyzer) {
-
-			@Override
-			protected Query getRangeQuery(final String fieldName, final String start, final String end, final boolean startInclusive,
-					final boolean endInclusive) throws ParseException {
-
-				if ("testIntField".equals(fieldName)) {
-					int startInt = Integer.parseInt(start);
-					int endInt = Integer.parseInt(end);
-					if (!startInclusive) {
-						startInt += 1;
-					}
-					if (!endInclusive) {
-						endInt -= 1;
-					}
-					return IntPoint.newRangeQuery(fieldName, startInt, endInt);
-
-				}
-
-				// return default
-				return super.getRangeQuery(fieldName, start, end, startInclusive, endInclusive);
-
-			}
-
-			@Override
-			protected Query newTermQuery(org.apache.lucene.index.Term term) {
-				String field = term.field();
-				String text = term.text();
-				if ("testIntField".equals(field)) {
-					int value = Integer.parseInt(text);
-					return IntPoint.newExactQuery(field, value);
-				}
-				return super.newTermQuery(term);
-			}
-		};
+		StandardQueryParser qp = new StandardQueryParser();
 		qp.setAllowLeadingWildcard(true);
+		qp.setAnalyzer(analyzer);
+		qp.setPointsConfigMap(Map.of(
+				"testIntField", new PointsConfig(NumberFormat.getIntegerInstance(), Integer.class)
+		));
 
 		int hits;
 
@@ -223,7 +196,6 @@ public class PerformanceStorageTest {
 		assertEquals("Expected 5 hits", 5, hits);
 		hits = runQuery(indexReader, qp, "testIntField:[1 TO 10]", 10);
 		assertEquals("Expected 5 hits", 5, hits);
-
 		indexReader.close();
 	}
 

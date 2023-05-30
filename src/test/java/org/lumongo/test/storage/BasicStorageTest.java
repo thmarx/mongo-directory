@@ -40,8 +40,18 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import org.apache.lucene.queryparser.flexible.core.config.ConfigurationKey;
+import org.apache.lucene.queryparser.flexible.core.config.QueryConfigHandler;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
+import org.apache.lucene.queryparser.flexible.standard.config.StandardQueryConfigHandler;
+import org.apache.lucene.queryparser.xml.builders.BooleanQueryBuilder;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -93,9 +103,9 @@ public class BasicStorageTest {
 		w.updateDocument(uidTerm, doc);
 	}
 
-	private static int runQuery(IndexReader indexReader, QueryParser qp, String queryStr, int count) throws IOException, ParseException {
+	private static int runQuery(IndexReader indexReader, StandardQueryParser qp, String queryStr, int count) throws Exception {
 
-		Query q = qp.parse(queryStr);
+		Query q = qp.parse(queryStr, "title");
 
 		return runQuery(indexReader, count, q);
 
@@ -105,9 +115,7 @@ public class BasicStorageTest {
 		long start = System.currentTimeMillis();
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 
-		Sort sort = new Sort();
-
-		sort.setSort(new SortedSetSortField("category", false));
+		Sort sort = new Sort(new SortedSetSortField("category", false));
 
 		TopFieldCollector collector = TopFieldCollector.create(sort, count, Integer.MAX_VALUE);
 
@@ -132,46 +140,16 @@ public class BasicStorageTest {
 	}
 
 	@Test
-	public void test2Query() throws IOException, ParseException {
+	public void test2Query() throws Exception {
 		IndexReader indexReader = DirectoryReader.open(directory);
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
-		QueryParser qp = new QueryParser("title", analyzer) {
-
-			@Override
-			protected Query getRangeQuery(final String fieldName, final String start, final String end, final boolean startInclusive,
-					final boolean endInclusive) throws ParseException {
-
-				if ("testIntField".equals(fieldName)) {
-					int startInt = Integer.parseInt(start);
-					int endInt = Integer.parseInt(end);
-					if (!startInclusive) {
-						startInt += 1;
-					}
-					if (!endInclusive) {
-						endInt -= 1;
-					}
-					return IntPoint.newRangeQuery(fieldName, startInt, endInt);
-
-				}
-
-				// return default
-				return super.getRangeQuery(fieldName, start, end, startInclusive, endInclusive);
-
-			}
-
-			@Override
-			protected Query newTermQuery(org.apache.lucene.index.Term term) {
-				String field = term.field();
-				String text = term.text();
-				if ("testIntField".equals(field)) {
-					int value = Integer.parseInt(text);
-					return IntPoint.newExactQuery(field, value);
-				}
-				return super.newTermQuery(term);
-			}
-		};
+		StandardQueryParser qp = new StandardQueryParser();
 		qp.setAllowLeadingWildcard(true);
+		qp.setAnalyzer(analyzer);
+		qp.setPointsConfigMap(Map.of(
+				"testIntField", new PointsConfig(NumberFormat.getIntegerInstance(), Integer.class)
+		));
 
 		int hits;
 
@@ -194,10 +172,22 @@ public class BasicStorageTest {
 		hits = runQuery(indexReader, qp, "testIntField:[1 TO 10]", 10);
 		assertEquals("Expected 5 hits", 5, hits);
 
-
 		indexReader.close();
 	}
 
+	@Test
+	public void test_the_apoi() throws Exception {
+		try (IndexReader indexReader = DirectoryReader.open(directory)) {
+			IndexSearcher searcher = new IndexSearcher(indexReader);
+			
+			int hits = runQuery(indexReader, 10, IntPoint.newExactQuery("testIntField", 3));
+			assertEquals("Expected 5 hits", 5, hits);
+			//runQuery(indexReader, qp, "testIntField:[1 TO 10]", 10);
+			hits = runQuery(indexReader, 10, IntPoint.newRangeQuery("testIntField", 1, 10));
+			assertEquals("Expected 5 hits", 5, hits);
+		}
+	}
+	
 	@Test
 	public void test3Api() throws Exception {
 		String hostName = TestHelper.getMongoServer();

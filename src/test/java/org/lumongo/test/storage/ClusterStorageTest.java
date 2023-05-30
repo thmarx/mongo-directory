@@ -106,9 +106,8 @@ public class ClusterStorageTest {
 		long start = System.currentTimeMillis();
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 
-		Sort sort = new Sort();
+		Sort sort = new Sort(new SortedSetSortField("category", false));
 
-		sort.setSort(new SortedSetSortField("category", false));
 
 		TopFieldCollector collector = TopFieldCollector.create(sort, count, Integer.MAX_VALUE);
 
@@ -159,17 +158,6 @@ public class ClusterStorageTest {
 				// return default
 				return super.getRangeQuery(fieldName, start, end, startInclusive, endInclusive);
 
-			}
-
-			@Override
-			protected Query newTermQuery(org.apache.lucene.index.Term term) {
-				String field = term.field();
-				String text = term.text();
-				if ("testIntField".equals(field)) {
-					int value = Integer.parseInt(text);
-					return IntPoint.newExactQuery(field, value);
-				}
-				return super.newTermQuery(term);
 			}
 		};
 		qp.setAllowLeadingWildcard(true);
