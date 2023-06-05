@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import org.bson.Document;
 import org.bson.types.Binary;
@@ -321,7 +322,7 @@ public class MongoFile implements NosqlFile {
 		object.put(MongoDirectory.BLOCK_NUMBER, mongoBlock.blockNumber);
 		object.put(MongoDirectory.BYTES, new Binary(mongoBlock.bytes));
 
-		c.replaceOne(query, object, new UpdateOptions().upsert(true));
+		c.replaceOne(query, object, new ReplaceOptions().upsert(true));
 
 	}
 

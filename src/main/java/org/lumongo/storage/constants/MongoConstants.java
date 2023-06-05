@@ -1,10 +1,5 @@
 package org.lumongo.storage.constants;
 
-import com.mongodb.gridfs.GridFSDBFile;
-
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-
 public interface MongoConstants {
 	public static interface StandardDBs {
 		public static final String ADMIN = "admin";
@@ -41,25 +36,6 @@ public interface MongoConstants {
 
 		public static String createNameSpace(String databaseName, String collectionName) {
 			return databaseName + "." + collectionName;
-		}
-
-		public static byte[] readFileFromGridFS(GridFSDBFile file) {
-			InputStream is = file.getInputStream();
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			try {
-
-				byte bytes[] = new byte[BUFFER_SIZE];
-				int read = -1;
-
-				while ((read = is.read(bytes)) != -1) {
-					baos.write(bytes, 0, read);
-				}
-
-				return baos.toByteArray();
-			}
-			catch (Exception e) {
-			}
-			return null;
 		}
 	}
 }

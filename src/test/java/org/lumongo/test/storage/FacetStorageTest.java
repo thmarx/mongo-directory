@@ -1,9 +1,8 @@
 package org.lumongo.test.storage;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.SortedSetDocValuesField;
 import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
@@ -19,10 +18,8 @@ import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiCollector;
-import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.search.TotalHitCountCollector;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.util.BytesRef;
 import org.lumongo.storage.lucene.DistributedDirectory;
 import org.lumongo.storage.lucene.MongoDirectory;
 import org.lumongo.util.TestHelper;
@@ -43,7 +40,7 @@ public class FacetStorageTest {
 
 	public static void init() throws IOException {
 		MongoClient mongo = TestHelper.getMongo();
-		mongo.dropDatabase(TestHelper.TEST_DATABASE_NAME);
+		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
 		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
 	}
 

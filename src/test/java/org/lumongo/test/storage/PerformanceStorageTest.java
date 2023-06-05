@@ -1,6 +1,7 @@
 package org.lumongo.test.storage;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -15,8 +16,6 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
@@ -59,7 +58,7 @@ public class PerformanceStorageTest {
 	public static void cleanDatabaseAndInit() throws Exception {
 
 		MongoClient mongo = TestHelper.getMongo();
-		mongo.dropDatabase(TestHelper.TEST_DATABASE_NAME);
+		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
 		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -88,7 +87,7 @@ public class PerformanceStorageTest {
 
 		Directory the_directory;
 		MongoClient mongo = TestHelper.getMongo();
-		mongo.dropDatabase("PerformanceTest");
+		mongo.getDatabase("PerformanceTest").drop();
 		the_directory = new DistributedDirectory(new MongoDirectory(mongo, "PerformanceTest", STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -206,7 +205,7 @@ public class PerformanceStorageTest {
 
 		{
 
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			Directory directory = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 
 			StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -228,7 +227,7 @@ public class PerformanceStorageTest {
 
 		{
 
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			Directory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 			IndexReader indexReader = DirectoryReader.open(d);
 			indexReader.close();
@@ -237,7 +236,7 @@ public class PerformanceStorageTest {
 		}
 
 		{
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			DistributedDirectory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 
 			Path directory = Paths.get("/tmp/fsdirectory");

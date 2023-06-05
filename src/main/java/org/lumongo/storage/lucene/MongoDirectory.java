@@ -1,10 +1,11 @@
 package org.lumongo.storage.lucene;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import org.bson.Document;
 import org.lumongo.storage.constants.MongoConstants;
@@ -263,7 +264,7 @@ public class MongoDirectory implements NosqlDirectory {
 		query.put(FILE_NUMBER, nosqlFile.getFileNumber());
 
 		Document object = toDocument(nosqlFile);
-		c.replaceOne(query, object, new UpdateOptions().upsert(true));
+		c.replaceOne(query, object, new ReplaceOptions().upsert(true));
 
 	}
 

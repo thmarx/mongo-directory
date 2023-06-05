@@ -1,6 +1,7 @@
 package org.lumongo.test.storage;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
@@ -28,8 +29,6 @@ import org.apache.lucene.util.BytesRef;
 import org.lumongo.storage.lucene.DistributedDirectory;
 import org.lumongo.storage.lucene.MongoDirectory;
 import org.lumongo.util.TestHelper;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -54,7 +53,7 @@ public class ClusterStorageTest {
 		System.setProperty("java.net.preferIPv4Stack" , "true");
 
 		MongoClient mongo = TestHelper.getClusteredMongo();
-		mongo.dropDatabase(TestHelper.TEST_DATABASE_NAME);
+		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
 		directory = new DistributedDirectory(new MongoDirectory(mongo, "test", STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -194,7 +193,7 @@ public class ClusterStorageTest {
 
 		{
 
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			Directory directory = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 
 			StandardAnalyzer analyzer = new StandardAnalyzer();
@@ -216,7 +215,7 @@ public class ClusterStorageTest {
 
 		{
 
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			Directory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 			IndexReader indexReader = DirectoryReader.open(d);
 			indexReader.close();
@@ -225,7 +224,7 @@ public class ClusterStorageTest {
 		}
 
 		{
-			MongoClient mongo = new MongoClient(hostName);
+			MongoClient mongo = MongoClients.create(hostName);
 			DistributedDirectory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
 
 			Path directory = Paths.get("/tmp/fsdirectory");
