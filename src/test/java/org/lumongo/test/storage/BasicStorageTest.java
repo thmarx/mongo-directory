@@ -56,7 +56,10 @@ public class BasicStorageTest {
 	public static void cleanDatabaseAndInit() throws Exception {
 
 		MongoClient mongo = TestHelper.getMongo();
-		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
+		var col = mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).getCollection(STORAGE_TEST_INDEX);
+		if (col != null) {
+			col.drop();
+		}
 		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();

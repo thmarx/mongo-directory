@@ -14,7 +14,7 @@ public class TestHelper {
 	public static final String MONGO_SERVER_PROPERTY_DEFAULT = "mongodb://127.0.0.1:27017";
 
 	public static String getMongoServer() {
-		String mongoServer = System.getProperty(MONGO_SERVER_PROPERTY);
+		String mongoServer = System.getenv("MONGO_SEARCH_CONNECTIONSTRING");
 		if (mongoServer == null) {
 			return MONGO_SERVER_PROPERTY_DEFAULT;
 		}
