@@ -28,7 +28,9 @@ import org.lumongo.storage.lucene.DistributedDirectory;
 import org.lumongo.storage.lucene.MongoDirectory;
 import org.lumongo.util.TestHelper;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -49,17 +51,17 @@ import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 
 import static org.testng.AssertJUnit.assertEquals;
 
-public class PerformanceStorageTest {
+public class PerformanceStorageTest extends ContainerTest {
 
-	private static final String STORAGE_TEST_INDEX = "storageTest";
-	private static Directory directory;
+	private final String STORAGE_TEST_INDEX = "storageTest";
+	private  Directory directory;
 
-	@BeforeClass
-	public static void cleanDatabaseAndInit() throws Exception {
+	@BeforeMethod
+	public void cleanDatabaseAndInit() throws Exception {
 
-		MongoClient mongo = TestHelper.getMongo();
-		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
-		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
+		
+		mongoClient.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
+		directory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -77,8 +79,8 @@ public class PerformanceStorageTest {
 		w.close();
 	}
 
-	@AfterClass
-	public static void closeDirectory() throws Exception {
+	@AfterMethod
+	public void closeDirectory() throws Exception {
 		directory.close();
 	}
 
@@ -86,9 +88,8 @@ public class PerformanceStorageTest {
 	public void test_performance() throws Exception {
 
 		Directory the_directory;
-		MongoClient mongo = TestHelper.getMongo();
-		mongo.getDatabase("PerformanceTest").drop();
-		the_directory = new DistributedDirectory(new MongoDirectory(mongo, "PerformanceTest", STORAGE_TEST_INDEX, false));
+		mongoClient.getDatabase("PerformanceTest").drop();
+		the_directory = new DistributedDirectory(new MongoDirectory(mongoClient, "PerformanceTest", STORAGE_TEST_INDEX, false));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -205,8 +206,8 @@ public class PerformanceStorageTest {
 
 		{
 
-			MongoClient mongo = MongoClients.create(hostName);
-			Directory directory = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
+			
+			Directory directory = new DistributedDirectory(new MongoDirectory(mongoClient, databaseName, STORAGE_TEST_INDEX));
 
 			StandardAnalyzer analyzer = new StandardAnalyzer();
 			IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -227,8 +228,7 @@ public class PerformanceStorageTest {
 
 		{
 
-			MongoClient mongo = MongoClients.create(hostName);
-			Directory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
+			Directory d = new DistributedDirectory(new MongoDirectory(mongoClient, databaseName, STORAGE_TEST_INDEX));
 			IndexReader indexReader = DirectoryReader.open(d);
 			indexReader.close();
 			d.close();
@@ -236,8 +236,7 @@ public class PerformanceStorageTest {
 		}
 
 		{
-			MongoClient mongo = MongoClients.create(hostName);
-			DistributedDirectory d = new DistributedDirectory(new MongoDirectory(mongo, databaseName, STORAGE_TEST_INDEX));
+			DistributedDirectory d = new DistributedDirectory(new MongoDirectory(mongoClient, databaseName, STORAGE_TEST_INDEX));
 
 			Path directory = Paths.get("/tmp/fsdirectory");
 			try {
