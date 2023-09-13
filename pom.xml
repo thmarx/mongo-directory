@@ -1,15 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.thorstenmarx.lucene</groupId>
+	<groupId>gom.githb.thmarx.mongo.directory</groupId>
 	<artifactId>mongo-directory</artifactId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 	</properties>
+	<inceptionYear>2023</inceptionYear>
+	<organization>
+		<name>Marx-Software</name>
+		<url>https://marx-software.de</url>
+	</organization>
 	<licenses>
 		<license>
 			<name>Apache License Version 2.0</name>
@@ -22,6 +27,12 @@
 	<issueManagement>
 		<url>https://github.com/thmarx/mongo-directory/issues</url>
 	</issueManagement>
+	<developers>
+		<developer>
+			<name>Thorsten Marx</name>
+			<email>thorsten@marx-software.de</email>
+		</developer>
+	</developers>
 
 	<dependencyManagement>
 		<dependencies>
@@ -35,11 +46,6 @@
 		</dependencies>
 	</dependencyManagement>
 	<dependencies>
-		<!--dependency>
-			<groupId>org.mongodb</groupId>
-			<artifactId>mongo-java-driver</artifactId>
-			<version>3.12.13</version>
-		</dependency-->
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver-sync</artifactId>
@@ -95,17 +101,68 @@
 	<build>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<version>2.2.0</version>
+				<configuration>
+					<verbose>false</verbose>
+					<licenseName>apache_v2</licenseName>
+				</configuration>
 				<executions>
 					<execution>
-						<id>attach-sources</id>
+						<id>first</id>
+						<goals>
+							<goal>update-file-header</goal>
+						</goals>
+						<phase>process-sources</phase>
+						<configuration>
+							<licenseName>apache_v2</licenseName>
+							<roots>
+								<root>src/main/java</root>
+								<root>src/test</root>
+							</roots>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.5.0</version>
+				<configuration>
+					<failOnError>false</failOnError>
+					<failOnWarnings>false</failOnWarnings>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
 						<goals>
 							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
+	<distributionManagement>
+		<repository>
+			<id>github</id>
+			<name>GitHub OWNER Apache Maven Packages</name>
+			<url>https://maven.pkg.github.com/thmarx/mongo-directory</url>
+		</repository>
+	</distributionManagement>
 </project>
