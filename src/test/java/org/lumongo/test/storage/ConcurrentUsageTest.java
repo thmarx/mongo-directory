@@ -21,6 +21,7 @@ package org.lumongo.test.storage;
  */
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -50,8 +51,8 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 
-public class ReopenTest extends ContainerTest{
-	private final String STORAGE_TEST_INDEX = "reopenTest";
+public class ConcurrentUsageTest extends ContainerTest{
+	private final String STORAGE_TEST_INDEX = "concurrent";
 	private Directory directory;
 
 	private SearcherManager searcherManager;
@@ -93,31 +94,38 @@ public class ReopenTest extends ContainerTest{
 	}
 
 	@Test
-	public void nrt_test_1 () throws IOException {
+	public void extern_reader_can_see_changes () throws IOException {
 		
-		
-		addDoc("nrt_test_1", "nrtt1");
-		
-		searcherManager.maybeRefreshBlocking();
-		
-		IndexSearcher searcher = searcherManager.acquire();
-		try {
-			
-			BooleanQuery.Builder builder = new BooleanQuery.Builder();
-			builder.add(new TermQuery(new Term("uid", "nrtt1")), BooleanClause.Occur.MUST);
-			
-			TopDocs topDocs = searcher.search(builder.build(), Integer.MAX_VALUE);
-			
-			Assertions.assertThat(topDocs.totalHits.value).isEqualTo(1);
-		} finally {
-			searcherManager.release(searcher);
-		}
+		addDoc("lets change the index", UUID.randomUUID().toString());
 		writer.commit();
-	
-		try (IndexReader reader = DirectoryReader.open(new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX)))) {
-			System.out.println(reader.maxDoc());
-		}
 		
+		try (
+				var readerDirectory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false, true));
+				SearcherManager sm = new SearcherManager(readerDirectory, new SearcherFactory());) {
+			
+			
+			Assertions.assertThat(sm.isSearcherCurrent()).isTrue();
+			Assertions.assertThat(count(sm)).isEqualTo(1);
+			addDoc("lets change the index", UUID.randomUUID().toString());
+			writer.commit();
+			Assertions.assertThat(count(sm)).isEqualTo(1);
+			Assertions.assertThat(sm.isSearcherCurrent()).isFalse();
+			
+			sm.maybeRefreshBlocking();
+			Assertions.assertThat(count(sm)).isEqualTo(2);
+			Assertions.assertThat(sm.isSearcherCurrent()).isTrue();
+			
+			sm.close();
+		}
+	}
+	
+	private int count (final SearcherManager sm) throws IOException {
+		IndexSearcher is = sm.acquire();
+		try {
+			return is.getIndexReader().numDocs();
+		} finally {
+			sm.release(is);
+		}
 	}
 	
 }

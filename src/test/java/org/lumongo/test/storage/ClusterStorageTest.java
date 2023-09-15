@@ -74,7 +74,7 @@ public class ClusterStorageTest {
 
 		MongoClient mongo = TestHelper.getClusteredMongo();
 		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
-		directory = new DistributedDirectory(new MongoDirectory(mongo, "test", STORAGE_TEST_INDEX, false));
+		directory = new DistributedDirectory(new MongoDirectory(mongo, "test", STORAGE_TEST_INDEX));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);

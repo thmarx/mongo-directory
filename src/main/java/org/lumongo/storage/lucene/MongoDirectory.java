@@ -74,8 +74,9 @@ public class MongoDirectory implements NosqlDirectory {
 	protected final String indexName;
 	private final int blockSize;
 	protected final short indexNumber;
-	private final ConcurrentHashMap<String, MongoFile> nameToFileMap;
-
+	private final boolean readonlyDirectory;
+	private ConcurrentHashMap<String, MongoFile> nameToFileMap;
+	
 	public static void setMaxIndexBlocks(int blocks) {
 		MongoFile.setMaxIndexBlocks(blocks);
 	}
@@ -93,19 +94,20 @@ public class MongoDirectory implements NosqlDirectory {
 	}
 
 	public MongoDirectory(MongoClient mongo, String dbname, String indexName) throws MongoException, IOException {
-		this(mongo, dbname, indexName, false);
+		this(mongo, dbname, indexName, false, false);
 	}
 
-	public MongoDirectory(MongoClient mongo, String dbname, String indexName, boolean sharded) throws MongoException, IOException {
-		this(mongo, dbname, indexName, sharded, DEFAULT_BLOCK_SIZE);
+	public MongoDirectory(MongoClient mongo, String dbname, String indexName, boolean sharded, boolean readonly) throws MongoException, IOException {
+		this(mongo, dbname, indexName, sharded, readonly, DEFAULT_BLOCK_SIZE);
 	}
 
-	public MongoDirectory(MongoClient mongo, String ddName, String indexName, boolean sharded, int blockSize) throws MongoException, IOException {
+	public MongoDirectory(MongoClient mongo, String ddName, String indexName, boolean sharded, boolean readonly, int blockSize) throws MongoException, IOException {
 
 		this.mongo = mongo;
 		this.dbname = ddName;
 		this.indexName = indexName;
 		this.blockSize = blockSize;
+		this.readonlyDirectory = readonly;
 
 		synchronized (MongoDirectory.class) {
 			//get back a index number to use instead of the string
@@ -141,6 +143,14 @@ public class MongoDirectory implements NosqlDirectory {
 		fetchInitialContents();
 	}
 
+	public ConcurrentHashMap<String, MongoFile> getNameToFileMap () throws MongoException, IOException {
+		if (readonlyDirectory) {
+			nameToFileMap = new ConcurrentHashMap<>();
+			fetchInitialContents();
+		}
+		return nameToFileMap;
+	}
+	
 	public String getIndexName() {
 		return indexName;
 	}
@@ -170,7 +180,7 @@ public class MongoDirectory implements NosqlDirectory {
 	@Override
 	public String[] getFileNames() throws IOException {
 
-		ConcurrentHashMap.KeySetView<String, MongoFile> strings = nameToFileMap.keySet();
+		ConcurrentHashMap.KeySetView<String, MongoFile> strings = getNameToFileMap().keySet();
 		return strings.toArray(new String[strings.size()]);
 	}
 
@@ -181,8 +191,9 @@ public class MongoDirectory implements NosqlDirectory {
 
 	@Override
 	public MongoFile getFileHandle(String filename, boolean createIfNotFound) throws IOException {
-		if (nameToFileMap.containsKey(filename)) {
-			return nameToFileMap.get(filename);
+		final ConcurrentHashMap<String, MongoFile> _nameToFileMap = getNameToFileMap();
+		if (_nameToFileMap.containsKey(filename)) {
+			return _nameToFileMap.get(filename);
 		}
 
 		MongoCollection<Document> c = getFilesCollection();
@@ -206,7 +217,7 @@ public class MongoDirectory implements NosqlDirectory {
 	private MongoFile createFile(String fileName) throws IOException {
 		synchronized (this) {
 
-			TreeSet<Short> fileNumbers = nameToFileMap.values().stream().map(mongoFile -> mongoFile.fileNumber).collect(Collectors.toCollection(TreeSet::new));
+			TreeSet<Short> fileNumbers = getNameToFileMap().values().stream().map(mongoFile -> mongoFile.fileNumber).collect(Collectors.toCollection(TreeSet::new));
 
 			FindIterable<Document> documents = getFilesCollection().find();
 			for (Document document : documents) {
@@ -321,8 +332,8 @@ public class MongoDirectory implements NosqlDirectory {
 
 		updateFileMetadata(mongoFile);
 
-		nameToFileMap.remove(source);
-		nameToFileMap.put(dest, mongoFile);
+		getNameToFileMap().remove(source);
+		getNameToFileMap().put(dest, mongoFile);
 
 	}
 

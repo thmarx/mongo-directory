@@ -61,7 +61,7 @@ public class FacetStorageTest {
 	public static void init() throws IOException {
 		MongoClient mongo = TestHelper.getMongo();
 		mongo.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
-		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
+		directory = new DistributedDirectory(new MongoDirectory(mongo, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX));
 	}
 
 	/** Build the example index. */

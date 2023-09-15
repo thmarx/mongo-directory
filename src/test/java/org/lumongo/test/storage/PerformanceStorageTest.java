@@ -81,7 +81,7 @@ public class PerformanceStorageTest extends ContainerTest {
 
 		
 		mongoClient.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
-		directory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
+		directory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -109,7 +109,7 @@ public class PerformanceStorageTest extends ContainerTest {
 
 		Directory the_directory;
 		mongoClient.getDatabase("PerformanceTest").drop();
-		the_directory = new DistributedDirectory(new MongoDirectory(mongoClient, "PerformanceTest", STORAGE_TEST_INDEX, false));
+		the_directory = new DistributedDirectory(new MongoDirectory(mongoClient, "PerformanceTest", STORAGE_TEST_INDEX));
 
 		StandardAnalyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig config = new IndexWriterConfig(analyzer);

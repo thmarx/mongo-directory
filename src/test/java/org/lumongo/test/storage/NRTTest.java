@@ -61,7 +61,7 @@ public class NRTTest extends ContainerTest{
 
 		
 		mongoClient.getDatabase(TestHelper.TEST_DATABASE_NAME).drop();
-		directory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX, false));
+		directory = new DistributedDirectory(new MongoDirectory(mongoClient, TestHelper.TEST_DATABASE_NAME, STORAGE_TEST_INDEX));
 
 		NRTCachingDirectory cachedFSDir = new NRTCachingDirectory(directory, 5.0, 60.0);
 		
