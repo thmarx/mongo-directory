@@ -106,7 +106,7 @@ public class NRTTest extends ContainerTest{
 			
 			TopDocs topDocs = searcher.search(builder.build(), Integer.MAX_VALUE);
 			
-			Assertions.assertThat(topDocs.totalHits.value).isEqualTo(1);
+			Assertions.assertThat(topDocs.totalHits.value()).isEqualTo(1);
 		} finally {
 			searcherManager.release(searcher);
 		}

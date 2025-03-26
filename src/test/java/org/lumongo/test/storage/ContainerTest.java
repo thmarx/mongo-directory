@@ -35,7 +35,7 @@ public abstract class ContainerTest {
 	@BeforeClass
 	public void up() {
 		mongdbContainer = new MongoDBContainer(DockerImageName.parse(
-				"mongo:6.0.9"
+				"mongo:8.0.6"
 		));
 		mongdbContainer.start();
 

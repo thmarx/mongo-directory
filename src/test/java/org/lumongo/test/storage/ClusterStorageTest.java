@@ -44,6 +44,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedSetSortField;
 import org.apache.lucene.search.TopFieldCollector;
+import org.apache.lucene.search.TopFieldCollectorManager;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import org.lumongo.storage.lucene.DistributedDirectory;
@@ -113,7 +114,7 @@ public class ClusterStorageTest {
 		w.updateDocument(uidTerm, doc);
 	}
 
-	private static int runQuery(IndexReader indexReader, QueryParser qp, String queryStr, int count) throws IOException, ParseException {
+	private static long runQuery(IndexReader indexReader, QueryParser qp, String queryStr, int count) throws IOException, ParseException {
 
 		Query q = qp.parse(queryStr);
 
@@ -121,19 +122,19 @@ public class ClusterStorageTest {
 
 	}
 
-	private static int runQuery(IndexReader indexReader, int count, Query q) throws IOException {
+	private static long runQuery(IndexReader indexReader, int count, Query q) throws IOException {
 		long start = System.currentTimeMillis();
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 
 		Sort sort = new Sort(new SortedSetSortField("category", false));
 
 
-		TopFieldCollector collector = TopFieldCollector.create(sort, count, Integer.MAX_VALUE);
+		var manager = new TopFieldCollectorManager(sort, count, Integer.MAX_VALUE);
 
-		searcher.search(q, collector);
+		var topDocs = searcher.search(q, manager);
 
-		ScoreDoc[] hits = collector.topDocs().scoreDocs;
-		int totalHits = collector.getTotalHits();
+		ScoreDoc[] hits = topDocs.scoreDocs;
+		long totalHits = topDocs.totalHits.value();
 		@SuppressWarnings("unused") long searchTime = System.currentTimeMillis() - start;
 
 		start = System.currentTimeMillis();
@@ -141,7 +142,7 @@ public class ClusterStorageTest {
 		List<String> ids = new ArrayList<>();
 		for (ScoreDoc hit : hits) {
 			int docId = hit.doc;
-			Document d = searcher.doc(docId);
+			Document d = searcher.getIndexReader().storedFields().document(docId);
 			ids.add(d.get("uid"));
 
 		}
@@ -181,7 +182,7 @@ public class ClusterStorageTest {
 		};
 		qp.setAllowLeadingWildcard(true);
 
-		int hits;
+		long hits;
 
 		hits = runQuery(indexReader, qp, "java", 10);
 		assertEquals("Expected 2 hits", 2, hits);

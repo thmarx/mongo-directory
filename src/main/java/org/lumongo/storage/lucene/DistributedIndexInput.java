@@ -19,30 +19,25 @@ package org.lumongo.storage.lucene;
  * limitations under the License.
  * #L%
  */
-
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one or more contributor license agreements. See the NOTICE
+ * file distributed with this work for additional information regarding copyright ownership. The ASF licenses this file
+ * to You under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the
+ * License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
-
 import org.apache.lucene.store.IndexInput;
 
 import java.io.EOFException;
 import java.io.IOException;
 
 public class DistributedIndexInput extends IndexInput {
+
 	private final NosqlFile nosqlFile;
 
 	protected long position;
@@ -120,7 +115,7 @@ public class DistributedIndexInput extends IndexInput {
 	@Override
 	public IndexInput slice(String sliceDescription, final long sliceOffset, final long length) throws IOException {
 		if (sliceOffset < 0 || length < 0 || sliceOffset + length > this.length) {
-			throw new IllegalArgumentException("slice() " + sliceDescription + " out of bounds: "  + this);
+			throw new IllegalArgumentException("slice() " + sliceDescription + " out of bounds: " + this);
 		}
 		final DistributedIndexInput dii = new DistributedIndexInput(getFullSliceDescription(sliceDescription), nosqlFile, this.sliceOffset + sliceOffset, length);
 		return dii;
@@ -131,8 +126,7 @@ public class DistributedIndexInput extends IndexInput {
 		IndexInput ii = new DistributedIndexInput(getFullSliceDescription(null), nosqlFile, sliceOffset, length);
 		try {
 			ii.seek(getFilePointer());
-		}
-		catch (IOException ioe) {
+		} catch (IOException ioe) {
 			throw new AssertionError(ioe);
 		}
 

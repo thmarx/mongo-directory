@@ -35,10 +35,10 @@ public class TestHelper {
 
 	public static String getMongoServer() {
 		String mongoServer = System.getenv("MONGO_SEARCH_CONNECTIONSTRING");
-		if (mongoServer == null) {
+		//if (mongoServer == null) {
 			return MONGO_SERVER_PROPERTY_DEFAULT;
-		}
-		return mongoServer;
+		//}
+		//return mongoServer;
 	}
 
 	public static MongoClient getMongo() throws UnknownHostException, MongoException {

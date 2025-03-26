@@ -27,6 +27,7 @@ import org.apache.lucene.facet.DrillDownQuery;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsCollectorManager;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.sortedset.DefaultSortedSetDocValuesReaderState;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesFacetCounts;
@@ -101,7 +102,7 @@ public class FacetStorageTest {
 	private List<FacetResult> search() throws IOException {
 		DirectoryReader indexReader = DirectoryReader.open(directory);
 		IndexSearcher searcher = new IndexSearcher(indexReader);
-		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
+		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader, config);
 		
 		// Aggregates the facet counts
 		FacetsCollector fc = new FacetsCollector();
@@ -129,13 +130,14 @@ public class FacetStorageTest {
 	private FacetResult drillDown() throws IOException {
 		DirectoryReader indexReader = DirectoryReader.open(directory);
 		IndexSearcher searcher = new IndexSearcher(indexReader);
-		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader);
+		SortedSetDocValuesReaderState state = new DefaultSortedSetDocValuesReaderState(indexReader, config);
 		
 		// Now user drills down on Publish Year/2010:
 		DrillDownQuery q = new DrillDownQuery(config);
 		q.add("Publish Year", "2010");
-		FacetsCollector fc = new FacetsCollector();
-		FacetsCollector.search(searcher, q, 10, fc);
+		
+		FacetsCollectorManager fcm = new FacetsCollectorManager();
+    	FacetsCollector fc = FacetsCollectorManager.search(searcher, q, 10, fcm).facetsCollector();
 		
 		// Retrieve results
 		Facets facets = new SortedSetDocValuesFacetCounts(state, fc);

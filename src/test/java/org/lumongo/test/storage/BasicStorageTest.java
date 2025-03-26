@@ -41,7 +41,8 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortedSetSortField;
-import org.apache.lucene.search.TopFieldCollector;
+import org.apache.lucene.search.TopFieldCollectorManager;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.util.BytesRef;
 import org.lumongo.storage.lucene.DistributedDirectory;
@@ -63,8 +64,12 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.apache.lucene.codecs.CodecUtil;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
+import org.apache.lucene.store.ChecksumIndexInput;
+import org.apache.lucene.store.IOContext;
+import org.apache.lucene.store.IndexInput;
 
 import static org.testng.AssertJUnit.assertEquals;
 
@@ -93,7 +98,7 @@ public class BasicStorageTest {
 		addDoc(w, "This is a long title with nothing interesting", "id-3");
 		addDoc(w, "Java is awesome", "id-4");
 		addDoc(w, "Really big fish", "id-5");
-
+		
 		w.commit();
 		w.close();
 	}
@@ -119,7 +124,7 @@ public class BasicStorageTest {
 		w.updateDocument(uidTerm, doc);
 	}
 
-	private static int runQuery(IndexReader indexReader, StandardQueryParser qp, String queryStr, int count) throws Exception {
+	private static long runQuery(IndexReader indexReader, StandardQueryParser qp, String queryStr, int count) throws Exception {
 
 		Query q = qp.parse(queryStr, "title");
 
@@ -127,18 +132,18 @@ public class BasicStorageTest {
 
 	}
 
-	private static int runQuery(IndexReader indexReader, int count, Query q) throws IOException {
+	private static long runQuery(IndexReader indexReader, int count, Query q) throws IOException {
 		long start = System.currentTimeMillis();
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 
 		Sort sort = new Sort(new SortedSetSortField("category", false));
 
-		TopFieldCollector collector = TopFieldCollector.create(sort, count, Integer.MAX_VALUE);
+		var manager = new TopFieldCollectorManager(sort, count, Integer.MAX_VALUE);
 
-		searcher.search(q, collector);
+		TopFieldDocs topDocs = searcher.search(q, manager);
 
-		ScoreDoc[] hits = collector.topDocs().scoreDocs;
-		int totalHits = collector.getTotalHits();
+		ScoreDoc[] hits = topDocs.scoreDocs;
+		long totalHits = topDocs.totalHits.value();
 		@SuppressWarnings("unused") long searchTime = System.currentTimeMillis() - start;
 
 		start = System.currentTimeMillis();
@@ -146,7 +151,7 @@ public class BasicStorageTest {
 		List<String> ids = new ArrayList<>();
 		for (ScoreDoc hit : hits) {
 			int docId = hit.doc;
-			Document d = searcher.doc(docId);
+			Document d = searcher.getIndexReader().storedFields().document(docId);
 			ids.add(d.get("uid"));
 
 		}
@@ -167,7 +172,7 @@ public class BasicStorageTest {
 				"testIntField", new PointsConfig(NumberFormat.getIntegerInstance(), Integer.class)
 		));
 
-		int hits;
+		long hits;
 
 		hits = runQuery(indexReader, qp, "java", 10);
 		assertEquals("Expected 2 hits", 2, hits);
@@ -196,7 +201,7 @@ public class BasicStorageTest {
 		try (IndexReader indexReader = DirectoryReader.open(directory)) {
 			IndexSearcher searcher = new IndexSearcher(indexReader);
 			
-			int hits = runQuery(indexReader, 10, IntPoint.newExactQuery("testIntField", 3));
+			long hits = runQuery(indexReader, 10, IntPoint.newExactQuery("testIntField", 3));
 			assertEquals("Expected 5 hits", 5, hits);
 			//runQuery(indexReader, qp, "testIntField:[1 TO 10]", 10);
 			hits = runQuery(indexReader, 10, IntPoint.newRangeQuery("testIntField", 1, 10));
